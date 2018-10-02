@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MyService.Controllers
@@ -14,6 +15,9 @@ namespace MyService.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<string>> Get()
         {
+            TelemetryClient client = new TelemetryClient();
+            client.TrackEvent("myeventname");
+
             return new string[] { "value1", "value2" };
         }
 
