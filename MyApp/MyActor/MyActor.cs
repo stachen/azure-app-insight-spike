@@ -7,6 +7,10 @@ using Microsoft.ServiceFabric.Actors;
 using Microsoft.ServiceFabric.Actors.Runtime;
 using Microsoft.ServiceFabric.Actors.Client;
 using MyActor.Interfaces;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+using System.Net.Http;
+using System.Text;
 
 namespace MyActor
 {
@@ -51,9 +55,30 @@ namespace MyActor
         /// TODO: Replace with your own actor method.
         /// </summary>
         /// <returns></returns>
-        Task<int> IMyActor.GetCountAsync(CancellationToken cancellationToken)
+        async Task<int> IMyActor.GetCountAsync(CancellationToken cancellationToken)
         {
-            return this.StateManager.GetStateAsync<int>("count", cancellationToken);
+
+            TelemetryClient client = new TelemetryClient();
+
+            int count;
+            int ret;
+            using (var operation = client.StartOperation<RequestTelemetry>("GetCountAsync-OperationName"))
+            {
+                count = await this.StateManager.GetStateAsync<int>("count", cancellationToken);
+                ret = count;
+                count++;
+                var httpClient = new HttpClient();
+                var requestUri = "https://postman-echo.com/post";
+                using (var postResponse = await httpClient.PostAsync(requestUri, new StringContent("hello", Encoding.UTF8, "application/text"), cancellationToken))
+                using (var content = postResponse.Content)
+                {
+
+                    var result = await content.ReadAsStringAsync();
+                }
+                await this.StateManager.AddOrUpdateStateAsync("count", count, (key, value) => count > value ? count : value, cancellationToken);
+            }
+
+            return ret;
         }
 
         /// <summary>

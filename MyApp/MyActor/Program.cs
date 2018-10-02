@@ -9,7 +9,7 @@ using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.ApplicationInsights.ServiceFabric;
 using Microsoft.ApplicationInsights.ServiceFabric.Module;
 using Microsoft.ApplicationInsights.DependencyCollector;
-
+using Infrastructure.Telemetry;
 
 namespace MyActor
 {
@@ -38,6 +38,12 @@ namespace MyActor
                        TelemetryConfiguration.Active.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
                        new ServiceRemotingDependencyTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
                        new ServiceRemotingRequestTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
+                       var dependencyTrackingTelemetryModule = new DependencyTrackingTelemetryModule();
+                       dependencyTrackingTelemetryModule.ExcludeComponentCorrelationHttpHeadersOnDomains.Add("core.windows.net");
+                       dependencyTrackingTelemetryModule.Initialize(TelemetryConfiguration.Active);
+                       var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
+                       builder.Use((next) => new PollingTelemetryFilter(next));
+                       builder.Build();
                        return new ActorService(context, actorType);
                    }).GetAwaiter().GetResult();
 
