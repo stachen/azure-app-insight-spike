@@ -76,9 +76,30 @@ namespace MyActor
                     var result = await content.ReadAsStringAsync();
                 }
                 await this.StateManager.AddOrUpdateStateAsync("count", count, (key, value) => count > value ? count : value, cancellationToken);
+
+                CatchAndRethrowException();
             }
 
             return ret;
+        }
+
+        private void CatchAndRethrowException()
+        {
+            try
+            {
+                ThrowException();
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+
+        private void ThrowException()
+        {
+
+            throw new Exception("blah");
         }
 
         /// <summary>
