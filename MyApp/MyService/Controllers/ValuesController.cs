@@ -4,6 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.AspNetCore.Mvc;
+using MyActor.Interfaces;
+using Microsoft.ServiceFabric.Actors;
+using Microsoft.ServiceFabric.Actors.Client;
+using System.Threading;
 
 namespace MyService.Controllers
 {
@@ -13,12 +17,15 @@ namespace MyService.Controllers
     {
         // GET api/values
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        public async Task<ActionResult<IEnumerable<string>>> Get()
         {
             TelemetryClient client = new TelemetryClient();
             client.TrackEvent("myeventname");
 
-            return new string[] { "value1", "value2" };
+            var miningActor = ActorProxy.Create<IMyActor>(new ActorId(1));
+
+            var value = await miningActor.GetCountAsync(CancellationToken.None);
+            return new string[] { "value1", value.ToString() };
         }
 
         // GET api/values/5
