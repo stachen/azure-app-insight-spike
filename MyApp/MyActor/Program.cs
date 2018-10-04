@@ -33,6 +33,7 @@ namespace MyActor
 
                 TelemetryConfiguration.Active.InstrumentationKey = "b84236f0-5202-4b41-98d5-bde5b0675217";
                 TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+                TelemetryConfiguration.Active.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
                 TelemetryDebugWriter.IsTracingDisabled = true;
 
 
@@ -51,7 +52,6 @@ namespace MyActor
                    {
                        FabricTelemetryInitializerExtension.SetServiceCallContext(context);
                        TelemetryConfiguration.Active.TelemetryInitializers.Add(FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(context));
-                       TelemetryConfiguration.Active.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
                        return new ActorService(context, actorType);
                    }).GetAwaiter().GetResult();
 
