@@ -62,14 +62,15 @@ namespace MyActor
 
             int count;
             int ret;
-            using (var operation = client.StartOperation<RequestTelemetry>("GetCountAsync-OperationName"))
+            using (var operation = client.StartOperation<RequestTelemetry>("simple"))
             {
+       
                 count = await this.StateManager.GetStateAsync<int>("count", cancellationToken);
                 ret = count;
                 count++;
                 var httpClient = new HttpClient();
-                var requestUri = "https://postman-echo.com/post";
-                using (var postResponse = await httpClient.PostAsync(requestUri, new StringContent("hello", Encoding.UTF8, "application/text"), cancellationToken))
+                var requestUri = "https://httpstat.us/200";
+                using (var postResponse = await httpClient.GetAsync(requestUri))
                 using (var content = postResponse.Content)
                 {
 
@@ -77,7 +78,7 @@ namespace MyActor
                 }
                 await this.StateManager.AddOrUpdateStateAsync("count", count, (key, value) => count > value ? count : value, cancellationToken);
 
-                CatchAndRethrowException();
+                operation.Telemetry.Properties["CustomPartitionId"] = this.ActorService.Context.PartitionId.ToString();
             }
 
             return ret;
@@ -91,14 +92,25 @@ namespace MyActor
             }
             catch(Exception ex)
             {
+
+                for (int i = 0; i < 2000; i++)
+                {
+                    TelemetryClient _telemetryClient = new TelemetryClient();
+                    _telemetryClient.UnwrapAndTrackException(
+                        exception: ex,
+                        getProperties: () => new Dictionary<string, string>
+                        {
+                        { "ActorId", this.GetActorId().ToString() }
+                        });
+                }
                 throw ex;
             }
         }
 
 
+
         private void ThrowException()
         {
-
             throw new Exception("blah");
         }
 

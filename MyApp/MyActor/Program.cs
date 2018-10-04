@@ -27,23 +27,31 @@ namespace MyActor
                 // are automatically populated when you build this project.
                 // For more information, see https://aka.ms/servicefabricactorsplatform
 
+
+                new ServiceRemotingDependencyTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
+                new ServiceRemotingRequestTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
+
+                TelemetryConfiguration.Active.InstrumentationKey = "b84236f0-5202-4b41-98d5-bde5b0675217";
+                TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
+                TelemetryDebugWriter.IsTracingDisabled = true;
+
+
+                // this is the cause of dupe logging
+                var dependencyTrackingTelemetryModule = new DependencyTrackingTelemetryModule();
+                dependencyTrackingTelemetryModule.ExcludeComponentCorrelationHttpHeadersOnDomains.Add("core.windows.net");
+                dependencyTrackingTelemetryModule.Initialize(TelemetryConfiguration.Active);
+
+                var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
+                builder.Use((next) => new PollingTelemetryFilter(next));
+                builder.Build();
+
+
                 ActorRuntime.RegisterActorAsync<MyActor>(
                    (context, actorType) => 
                    {
-                       TelemetryConfiguration.Active.InstrumentationKey = "b84236f0-5202-4b41-98d5-bde5b0675217";
-                       TelemetryConfiguration.Active.TelemetryChannel.DeveloperMode = true;
-                       TelemetryDebugWriter.IsTracingDisabled = true;
                        FabricTelemetryInitializerExtension.SetServiceCallContext(context);
                        TelemetryConfiguration.Active.TelemetryInitializers.Add(FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(context));
                        TelemetryConfiguration.Active.TelemetryInitializers.Add(new HttpDependenciesParsingTelemetryInitializer());
-                       new ServiceRemotingDependencyTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
-                       new ServiceRemotingRequestTrackingTelemetryModule().Initialize(TelemetryConfiguration.Active);
-                       var dependencyTrackingTelemetryModule = new DependencyTrackingTelemetryModule();
-                       dependencyTrackingTelemetryModule.ExcludeComponentCorrelationHttpHeadersOnDomains.Add("core.windows.net");
-                       dependencyTrackingTelemetryModule.Initialize(TelemetryConfiguration.Active);
-                       var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
-                       builder.Use((next) => new PollingTelemetryFilter(next));
-                       builder.Build();
                        return new ActorService(context, actorType);
                    }).GetAwaiter().GetResult();
 

@@ -3,6 +3,8 @@
   <Parameters>
     <Parameter Name="MyService_ASPNETCORE_ENVIRONMENT" Value="Development" />
     <Parameter Name="MyService_InstanceCount" Value="1" />
-    <Parameter Name="MyActorService_PartitionCount" Value="1" />
+    <Parameter Name="MyActorService_PartitionCount" Value="10" />
+    <Parameter Name="MyActorService_MinReplicaSetSize" Value="2" />
+    <Parameter Name="MyActorService_TargetReplicaSetSize" Value="3" />
   </Parameters>
 </Application>

@@ -22,7 +22,7 @@ namespace MyService.Controllers
             TelemetryClient client = new TelemetryClient();
             client.TrackEvent("myeventname");
 
-            var miningActor = ActorProxy.Create<IMyActor>(new ActorId(1));
+            var miningActor = ActorProxy.Create<IMyActor>(new ActorId(Guid.NewGuid()));
 
             var value = await miningActor.GetCountAsync(CancellationToken.None);
             return new string[] { "value1", value.ToString() };
